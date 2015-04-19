@@ -421,11 +421,11 @@ else
 endif
 
 # Strict aliasing for hammerhead if enabled in the defconfig
-ifdef CONFIG_MACH_MSM8975_HAMMERHEAD_STRICT_ALIASING
+ifdef CONFIG_MACH_MSM8974_HAMMERHEAD_STRICT_ALIASING
     ifdef SABERMOD_KERNEL_CFLAGS
-    SABERMOD_KERNEL_CFLAGS	+= -fstrict-aliasing -Werror=strict-aliasing
+    SABERMOD_KERNEL_CFLAGS	+= $(KERNEL_STRICT_FLAGS)
     else
-    SABERMOD_KERNEL_CFLAGS	:= -fstrict-aliasing -Werror=strict-aliasing
+    SABERMOD_KERNEL_CFLAGS	:= $(KERNEL_STRICT_FLAGS)
     endif
 endif
 
@@ -457,7 +457,7 @@ KBUILD_CPPFLAGS := -D__KERNEL__
 KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -fno-common -Werror-implicit-function-declaration \
 		   -Wno-format-security -fno-delete-null-pointer-checks
-ifndef CONFIG_MACH_MSM8975_HAMMERHEAD_STRICT_ALIASING
+ifndef CONFIG_MACH_MSM8974_HAMMERHEAD_STRICT_ALIASING
 KBUILD_CFLAGS	+= -fno-strict-aliasing
 endif
 KBUILD_AFLAGS_KERNEL :=
