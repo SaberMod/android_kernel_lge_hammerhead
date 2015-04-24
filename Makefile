@@ -379,15 +379,23 @@ ifeq ($(strip $(O3_OPTIMIZATIONS)),true)
 SABERMOD_KERNEL_CFLAGS	:= -O3
 endif
 
-# Extra flags imported from the sabermod modified android build system
-# This will not accually do anything unless these strings are defined
-ifdef SABERMOD_KERNEL_CFLAGS
-    ifdef EXTRA_SABERMOD_GCC_CFLAGS
-    SABERMOD_KERNEL_CFLAGS	+= $(EXTRA_SABERMOD_GCC_CFLAGS)
-    endif
-else
-    ifdef EXTRA_SABERMOD_GCC_CFLAGS
-    SABERMOD_KERNEL_CFLAGS	:= $(EXTRA_SABERMOD_GCC_CFLAGS)
+ifeq ($(strip $(O3_OPTIMIZATIONS)),true)
+    # Extra flags imported from the sabermod modified android build system
+    # This will not accually do anything unless these strings are defined
+    ifdef SABERMOD_KERNEL_CFLAGS
+        ifdef EXTRA_SABERMOD_GCC_CFLAGS
+        SABERMOD_KERNEL_CFLAGS	+= $(EXTRA_SABERMOD_GCC_CFLAGS)
+        endif
+        ifdef EXTRA_SABERMOD_GCC_O3_CFLAGS
+        SABERMOD_KERNEL_CFLAGS += $(EXTRA_SABERMOD_GCC_O3_CFLAGS)
+        endif
+    else
+        ifdef EXTRA_SABERMOD_GCC_CFLAGS
+        SABERMOD_KERNEL_CFLAGS	:= $(EXTRA_SABERMOD_GCC_CFLAGS)
+        endif
+        ifdef EXTRA_SABERMOD_GCC_O3_CFLAGS
+        SABERMOD_KERNEL_CFLAGS := $(EXTRA_SABERMOD_GCC_O3_CFLAGS)
+        endif
     endif
 endif
 
@@ -429,13 +437,15 @@ ifdef CONFIG_MACH_MSM8974_HAMMERHEAD_STRICT_ALIASING
     endif
 endif
 
-ifdef SABERMOD_KERNEL_CFLAGS
-    ifdef GRAPHITE_KERNEL_FLAGS
-    SABERMOD_KERNEL_CFLAGS	+= $(GRAPHITE_KERNEL_FLAGS)
-    endif
-else
-    ifdef GRAPHITE_KERNEL_FLAGS
-    SABERMOD_KERNEL_CFLAGS	:= $(GRAPHITE_KERNEL_FLAGS)
+ifeq ($(strip $(O3_OPTIMIZATIONS)),true)
+    ifdef SABERMOD_KERNEL_CFLAGS
+        ifdef GRAPHITE_KERNEL_FLAGS
+        SABERMOD_KERNEL_CFLAGS	+= $(GRAPHITE_KERNEL_FLAGS)
+        endif
+    else
+        ifdef GRAPHITE_KERNEL_FLAGS
+        SABERMOD_KERNEL_CFLAGS	:= $(GRAPHITE_KERNEL_FLAGS)
+        endif
     endif
 endif
 
