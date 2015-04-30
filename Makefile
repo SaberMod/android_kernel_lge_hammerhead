@@ -383,15 +383,15 @@ ifeq ($(strip $(O3_OPTIMIZATIONS)),true)
     # Extra flags imported from the sabermod modified android build system
     # This will not accually do anything unless these strings are defined
     ifdef SABERMOD_KERNEL_CFLAGS
-        ifdef EXTRA_SABERMOD_GCC_CFLAGS
-        SABERMOD_KERNEL_CFLAGS	+= $(EXTRA_SABERMOD_GCC_CFLAGS)
+        ifdef EXTRA_SABERMOD_GCC_VECTORIZE_CFLAGS
+        SABERMOD_KERNEL_CFLAGS	+= $(EXTRA_SABERMOD_GCC_VECTORIZE_CFLAGS)
         endif
         ifdef EXTRA_SABERMOD_GCC_O3_CFLAGS
         SABERMOD_KERNEL_CFLAGS += $(EXTRA_SABERMOD_GCC_O3_CFLAGS)
         endif
     else
-        ifdef EXTRA_SABERMOD_GCC_CFLAGS
-        SABERMOD_KERNEL_CFLAGS	:= $(EXTRA_SABERMOD_GCC_CFLAGS)
+        ifdef EXTRA_SABERMOD_GCC_VECTORIZE_CFLAGS
+        SABERMOD_KERNEL_CFLAGS	:= $(EXTRA_SABERMOD_GCC_VECTORIZE_CFLAGS)
         endif
         ifdef EXTRA_SABERMOD_GCC_O3_CFLAGS
         SABERMOD_KERNEL_CFLAGS := $(EXTRA_SABERMOD_GCC_O3_CFLAGS)
