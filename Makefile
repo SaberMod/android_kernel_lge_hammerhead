@@ -330,7 +330,7 @@ include $(srctree)/scripts/Kbuild.include
 
 AS		= $(CROSS_COMPILE)as
 LD		= $(CROSS_COMPILE)ld
-REAL_CC		= $(CROSS_COMPILE)gcc
+CC		= $(CROSS_COMPILE)gcc
 CPP		= $(CC) -E
 AR		= $(CROSS_COMPILE)ar
 NM		= $(CROSS_COMPILE)nm
@@ -345,21 +345,103 @@ KALLSYMS	= scripts/kallsyms
 PERL		= perl
 CHECK		= sparse
 
-# Use the wrapper for the compiler.  This wrapper scans for new
-# warnings and causes the build to stop upon encountering them.
-CC		= $(srctree)/scripts/gcc-wrapper.py $(REAL_CC)
-
 CHECKFLAGS     := -D__linux__ -Dlinux -D__STDC__ -Dunix -D__unix__ \
 		  -Wbitwise -Wno-return-void $(CF)
-KERNELFLAGS	= -fgcse-lm -fgcse-sm -fsched-spec-load -fforce-addr -ffast-math -fsingle-precision-constant -mcpu=cortex-a15 -mtune=cortex-a15 -marm -mfpu=neon -ftree-vectorize -mvectorize-with-neon-quad -funroll-loops
-MODFLAGS	= -DMODULE $(KERNELFLAGS)
-CFLAGS_MODULE   = $(MODFLAGS)
-AFLAGS_MODULE   = $(MODFLAGS)
+CFLAGS_MODULE   =
+AFLAGS_MODULE   =
 LDFLAGS_MODULE  = -T $(srctree)/scripts/module-common.lds
-CFLAGS_KERNEL	= $(KERNELFLAGS)
-AFLAGS_KERNEL	= $(KERNELFLAGS)
+CFLAGS_KERNEL	=
+AFLAGS_KERNEL	=
 CFLAGS_GCOV	= -fprofile-arcs -ftest-coverage
 
+# begin The SaberMod Project additions
+
+# Copyright (C) 2015 The SaberMod Project
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+# Handle kernel CFLAGS
+
+# Highest level of basic gcc optimizations if enabled
+# This reads a imported string from the sabermod modified android build system
+ifeq ($(strip $(O3_OPTIMIZATIONS)),true)
+SABERMOD_KERNEL_CFLAGS	:= -O3
+endif
+
+ifeq ($(strip $(O3_OPTIMIZATIONS)),true)
+    # Extra flags imported from the sabermod modified android build system
+    # This will not accually do anything unless these strings are defined
+    ifdef SABERMOD_KERNEL_CFLAGS
+        ifdef EXTRA_SABERMOD_GCC_VECTORIZE_CFLAGS
+        SABERMOD_KERNEL_CFLAGS	+= $(EXTRA_SABERMOD_GCC_VECTORIZE_CFLAGS)
+        endif
+        ifdef EXTRA_SABERMOD_GCC_O3_CFLAGS
+        SABERMOD_KERNEL_CFLAGS += $(EXTRA_SABERMOD_GCC_O3_CFLAGS)
+        endif
+    else
+        ifdef EXTRA_SABERMOD_GCC_VECTORIZE_CFLAGS
+        SABERMOD_KERNEL_CFLAGS	:= $(EXTRA_SABERMOD_GCC_VECTORIZE_CFLAGS)
+        endif
+        ifdef EXTRA_SABERMOD_GCC_O3_CFLAGS
+        SABERMOD_KERNEL_CFLAGS := $(EXTRA_SABERMOD_GCC_O3_CFLAGS)
+        endif
+    endif
+endif
+
+ifdef SABERMOD_KERNEL_CFLAGS
+    ifdef kernel_arch_variant_cflags
+    SABERMOD_KERNEL_CFLAGS	+= $(kernel_arch_variant_cflags)
+    endif
+else
+    ifdef kernel_arch_variant_cflags
+    SABERMOD_KERNEL_CFLAGS	:= $(kernel_arch_variant_cflags)
+    endif
+endif
+
+# Strict aliasing for hammerhead if enabled in the defconfig
+ifdef CONFIG_MACH_MSM8974_HAMMERHEAD_STRICT_ALIASING
+    ifdef SABERMOD_KERNEL_CFLAGS
+    SABERMOD_KERNEL_CFLAGS	+= $(KERNEL_STRICT_FLAGS)
+    else
+    SABERMOD_KERNEL_CFLAGS	:= $(KERNEL_STRICT_FLAGS)
+    endif
+endif
+
+# Memory leak detector sanitizer
+ifdef SABERMOD_KERNEL_CFLAGS
+  SABERMOD_KERNEL_CFLAGS += -fsanitize=leak
+else
+  SABERMOD_KERNEL_CFLAGS := -fsanitize=leak
+endif
+
+ifeq ($(strip $(O3_OPTIMIZATIONS)),true)
+    ifdef SABERMOD_KERNEL_CFLAGS
+        ifdef GRAPHITE_KERNEL_FLAGS
+        SABERMOD_KERNEL_CFLAGS	+= $(GRAPHITE_KERNEL_FLAGS)
+        endif
+    else
+        ifdef GRAPHITE_KERNEL_FLAGS
+        SABERMOD_KERNEL_CFLAGS	:= $(GRAPHITE_KERNEL_FLAGS)
+        endif
+    endif
+endif
+
+# Add everything to CC at the end
+ifdef SABERMOD_KERNEL_CFLAGS
+CC	+= $(SABERMOD_KERNEL_CFLAGS)
+endif
+# end The SaberMod Project additions
 
 # Use LINUXINCLUDE when you must reference the include/ directory.
 # Needed to be compatible with the O= option
@@ -371,10 +453,11 @@ LINUXINCLUDE    := -I$(srctree)/arch/$(hdr-arch)/include \
 KBUILD_CPPFLAGS := -D__KERNEL__
 
 KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
-		   -fno-strict-aliasing -fno-common \
-		   -Werror-implicit-function-declaration \
-		   -Wno-format-security \
-		   -fno-delete-null-pointer-checks
+		   -fno-common -Werror-implicit-function-declaration \
+		   -Wno-format-security -fno-delete-null-pointer-checks
+ifndef CONFIG_MACH_MSM8974_HAMMERHEAD_STRICT_ALIASING
+KBUILD_CFLAGS	+= -fno-strict-aliasing
+endif
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=
 KBUILD_AFLAGS   := -D__ASSEMBLY__
@@ -564,17 +647,33 @@ endif # $(dot-config)
 # Defaults to vmlinux, but the arch makefile usually adds further targets
 all: vmlinux
 
-ifdef CONFIG_CC_OPTIMIZE_FOR_SIZE
-#we want all warnings to be seen and fixed
-#KBUILD_CFLAGS	+= -Os $(call cc-disable-warning,maybe-uninitialized,)
-KBUILD_CFLAGS	+= -Os
+# begin The SaberMod Project additions
+
+# Copyright (C) 2015 The SaberMod Project
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+# This reads a imported string from the sabermod modified android build system to check if -O3 optimizations are enabled.
+# If it is enabled do not bother checking for defconfig option for passing -Os
+ifneq ($(strip $(O3_OPTIMIZATIONS)),true)
+    ifdef CONFIG_CC_OPTIMIZE_FOR_SIZE
+    KBUILD_CFLAGS	+= -Os $(call cc-disable-warning,maybe-uninitialized,)
+    else
+    KBUILD_CFLAGS	+= -O2
+    endif
 endif
-ifdef CONFIG_CC_OPTIMIZE_DEFAULT
-KBUILD_CFLAGS	+= -O2
-endif
-ifdef CONFIG_CC_OPTIMIZE_ALOT
-KBUILD_CFLAGS	+= -O3
-endif
+# end The SaberMod Project additions
 
 include $(srctree)/arch/$(SRCARCH)/Makefile
 
@@ -995,7 +1094,7 @@ prepare1: prepare2 include/linux/version.h include/generated/utsrelease.h \
 archprepare: archheaders archscripts prepare1 scripts_basic
 
 prepare0: archprepare FORCE
-	$(Q)$(MAKE) $(build)=.
+	$(Q)$(MAKE) $(build)=. missing-syscalls
 
 # All the preparing..
 prepare: prepare0

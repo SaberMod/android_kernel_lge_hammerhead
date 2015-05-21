@@ -9,3 +9,8 @@ obj-$(CONFIG_WIFI_CONTROL_FUNC) += board-wifi-bcm.o
 obj-$(CONFIG_LCD_KCAL) += lge_kcal_ctrl.o
 
 CFLAGS_devices_lge.o += -Idrivers/staging/android
+
+ifdef CONFIG_MACH_MSM8974_HAMMERHEAD_STRICT_ALIASING
+CFLAGS_board-wifi-bcm.o := -fno-strict-aliasing
+endif
+
