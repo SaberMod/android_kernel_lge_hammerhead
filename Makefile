@@ -377,6 +377,8 @@ else
   CC = $(CROSS_COMPILE)gcc
 endif
 
+CPP = $(CC) -E
+
 # Highest level of basic gcc optimizations if enabled
 ifeq ($(strip $(LOCAL_O3)),true)
   SABERMOD_KERNEL_FLAGS	:= -O3
@@ -430,28 +432,21 @@ ifneq (1,$(words $(DISABLE_SANITIZE_LEAK)))
   endif
 endif
 
-ifdef SM_KERNEL_NAME
-  ifeq ($(filter 5.1.x% 6.0.x%, $(SM_KERNEL_NAME)),)
-    # Graphite optimizations
-    ifdef SABERMOD_KERNEL_FLAGS
-      ifdef GRAPHITE_KERNEL_FLAGS
-        SABERMOD_KERNEL_FLAGS += $(GRAPHITE_KERNEL_FLAGS)
-      endif
-    else
-      ifdef GRAPHITE_KERNEL_FLAGS
-        SABERMOD_KERNEL_FLAGS := $(GRAPHITE_KERNEL_FLAGS)
-      endif
-    endif
+ifdef SABERMOD_KERNEL_FLAGS
+  ifdef GRAPHITE_KERNEL_FLAGS
+    SABERMOD_KERNEL_FLAGS += $(GRAPHITE_KERNEL_FLAGS)
+  endif
+else
+  ifdef GRAPHITE_KERNEL_FLAGS
+    SABERMOD_KERNEL_FLAGS := $(GRAPHITE_KERNEL_FLAGS) -marm
   endif
 endif
 
 # Add everything to CC at the end
 ifdef SABERMOD_KERNEL_FLAGS
-  CC += $(SABERMOD_KERNEL_FLAGS) -marm
+  CC += $(SABERMOD_KERNEL_FLAGS)
 endif
 # end The SaberMod Project additions
-
-CPP = $(CC) -E
 
 # Use LINUXINCLUDE when you must reference the include/ directory.
 # Needed to be compatible with the O= option
