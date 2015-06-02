@@ -126,8 +126,9 @@ ifdef CONFIG_MACH_MSM8974_HAMMERHEAD_STRICT_ALIASING
 CFLAGS_KERNEL := -fno-strict-aliasing
 endif
 
-ifneq ($(GRAPHITE_UNROLL_AND_JAM),)
-CFLAGS_nf_conntrack_core.o := -fno-loop-unroll-and-jam
-CFLAGS_xt_hashlimit.o := -fno-loop-unroll-and-jam
-endif
+
+#ifneq ($(GRAPHITE_UNROLL_AND_JAM),)
+#CFLAGS_nf_conntrack_core.o := -fno-loop-unroll-and-jam
+#CFLAGS_xt_hashlimit.o := -fno-loop-unroll-and-jam
+#endif
 
